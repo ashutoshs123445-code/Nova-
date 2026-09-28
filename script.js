@@ -2,7 +2,7 @@
 /* NOVA — AI Command Core (frontend prototype).
    NO API KEYS HERE. Keep them on your own server and set NOVA_CONFIG.endpoint to it. */
 const NOVA_CONFIG = {
-  apiKey: 'xyz',            // TEST ONLY: replace xyz with your own key. Never share or publish this file with a real key in it.
+  apiKey: 'sk-rs6aBOtixzO6R8m418NEXir3t0vPjc5kr5VTfVPvSsVFh2uN',            // TEST ONLY: replace xyz with your own key. Never share or publish this file with a real key in it.
   model: 'gpt-6-astra',     // OpenAI model id
   endpoint: null }; // e.g. '/api/nova' -> POST {command} -> {intent,confidence,tool,reply}
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
