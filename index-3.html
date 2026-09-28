@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NOVA — AI Command Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&family=Inter:wght@300;400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"></head>
+<body data-state="idle">
+<canvas id="fx"></canvas><div class="fog"></div><div id="airZone"></div>
+<video id="cam" playsinline muted></video>
+<div id="boot"><div id="bootL"></div><button id="skip" class="mag">SKIP ↗</button></div>
+<div id="ui">
+<button id="menu" class="mag" aria-label="Menu">⋯</button>
+<nav id="tools"><button id="bSound" class="mag">SOUND OFF</button><button id="bVoice" class="mag">VOICE</button><button id="bGest" class="mag">GESTURE</button><button id="bAir" class="mag">AIR WRITE</button><button id="bDiag" class="mag">DIAG</button><button id="bKey" class="mag">API KEY</button><button id="bPerf" class="mag">BALANCED</button></nav>
+<aside class="hud l"><div><span>SYSTEM</span><b>ONLINE</b></div><div><span>VISION</span><b id="hVis">READY</b></div><div><span>VOICE</span><b>READY</b></div><div><span>GESTURE</span><b>READY</b></div></aside>
+<aside class="hud r"><div><span>CORE LOAD</span><b id="hLoad">24%</b></div><div><span>LATENCY</span><b id="hLat">18ms</b></div><div><span>SIGNAL</span><b id="hSig">98%</b></div><div><span>NEURAL LINK</span><b>ACTIVE</b></div></aside>
+<section id="state"><div class="tag"><i></i>NOVA<em class="mic">MIC LIVE</em></div><h1 id="stateText">READY</h1>
+<ol id="flow"><li>RECEIVED</li><li>ANALYZING</li><li>THINKING</li><li>EXECUTING</li><li>RESPONSE</li></ol></section>
+<section id="panel" class="hp"><u class="scan"></u><h4>COMMAND</h4><p id="pCmd">—</p>
+<dl><dt>INTENT</dt><dd id="pInt">—</dd><dt>CONFIDENCE</dt><dd id="pConf">—</dd><dt>STATUS</dt><dd id="pStat">—</dd></dl><p id="pRes"></p></section>
+<section id="gPanel" class="hp"><u class="scan"></u><h4>HAND TRACKING</h4><p id="gLock">SEARCHING</p>
+<dl><dt>GESTURE</dt><dd id="gName">PINCH</dd><dt>CONFIDENCE</dt><dd id="gConf">97.8%</dd></dl></section>
+<section id="airPanel" class="hp"><u class="scan"></u><h4>SPATIAL WRITING</h4><p>ACTIVE</p>
+<dl><dt>PEN</dt><dd>PINCH TO WRITE</dd><dt>STROKES</dt><dd id="aN">0</dd><dt>SPATIAL INPUT</dt><dd id="aIn">IDLE</dd><dt>RECOGNITION</dt><dd id="aRec">WAITING...</dd></dl></section>
+<section id="diag" class="hp"><h4>SYSTEM DIAGNOSTICS</h4>
+<div class="dr">CORE<b>ONLINE</b><i></i></div><div class="dr">VISION<b id="dVis">STANDBY</b><i></i></div><div class="dr">VOICE<b>READY</b><i></i></div>
+<div class="dr">GESTURE ENGINE<b>READY</b><i></i></div><div class="dr">AI ROUTER<b>READY</b><i></i></div><div class="dr">NETWORK<b>CONNECTED</b><i></i></div></section>
+<form id="cmd" autocomplete="off"><input id="cmdIn" placeholder="Ask NOVA anything..." enterkeyhint="send"><button class="mag" aria-label="Send">↗</button></form>
+<div id="chips"></div>
+</div>
+<script src="script.js"></script>
+</body></html>
