@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#02050b">
+<title>NOVA — Gemini Gesture AI</title>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02050b;color:#eaf7ff;font-family:Arial,sans-serif}
+html,body{overscroll-behavior:none}#scene,canvas{position:fixed;inset:0}#scene{z-index:5}#paint{z-index:5;pointer-events:none}.hud{position:fixed;z-index:5;pointer-events:none}
+.top{top:22px;left:28px;right:28px;display:flex;justify-content:space-between;align-items:center}.logo{font-weight:700;font-size:21px;letter-spacing:5px}.logo small{display:block;font-size:7px;color:#6e819c;letter-spacing:2px}.online{font-size:9px;letter-spacing:2px;color:#75ffbc}
+.side{top:130px;width:180px;font-size:8px;color:#71809a;letter-spacing:1.5px}.left{left:28px}.right{right:28px}.box{padding:12px;border-left:1px solid #65eaff55;background:#65eaff08;margin:8px 0}.box b{display:block;color:#d9e8fa;margin-top:5px;font-size:10px}.box.hint{line-height:1.7;font-size:7px}
+.coreText{top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;transition:opacity .5s}.live .coreText{opacity:.15}.coreText h1{margin:0;font-size:42px;letter-spacing:10px;text-shadow:0 0 35px #65eaff}.coreText p{margin:10px 0;color:#65eaff;font-size:9px;letter-spacing:4px}
+.pal{top:62px;left:50%;transform:translateX(-50%);display:flex;gap:6px}.sw{width:54px;height:28px;border-radius:8px;font-size:7px;font-weight:700;letter-spacing:1px;display:grid;place-items:center;color:#021018;border:2px solid transparent;opacity:.75;transition:.15s}.sw.on{opacity:1;border-color:#fff;box-shadow:0 0 18px var(--c);transform:translateY(3px)}
+.command{position:fixed;z-index:8;bottom:28px;left:50%;transform:translateX(-50%);width:min(650px,92vw)}.bar{display:flex;background:#07101ed9;border:1px solid #65eaff44;border-radius:15px;padding:5px;backdrop-filter:blur(18px)}input{flex:1;background:transparent;border:0;outline:0;color:white;padding:0 14px}button{cursor:pointer;border:0}.send{width:46px;border-radius:11px;background:#72eaff;color:#021018;font-size:20px}.gearb{width:40px;background:transparent;color:#65eaff;font-size:18px}.quick{margin:7px 4px 0;padding:6px 9px;border-radius:8px;background:#ffffff08;border:1px solid #ffffff12;color:#75839b;font-size:7px;letter-spacing:1px}
+.cfg{position:fixed;z-index:12;bottom:108px;left:50%;transform:translateX(-50%);width:min(420px,92vw);padding:14px;border:1px solid #65eaff44;background:#06101df2;border-radius:12px;display:none;font-size:9px;color:#8fa0ba;line-height:1.6}.cfg.show{display:block}.cfg b{color:#65eaff;letter-spacing:2px}.cfg input{display:block;width:100%;flex:none;margin:7px 0;padding:10px;border:1px solid #65eaff44;border-radius:8px;background:#0008}.cfg button{padding:9px 16px;border-radius:8px;background:#72eaff;color:#021018;font-weight:700;letter-spacing:1px}
+video{position:fixed;z-index:4;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scaleX(-1);filter:brightness(.85) contrast(1.05);transition:opacity .6s}body.live video{opacity:1}#hands{position:fixed;z-index:6;inset:0;pointer-events:none}
+.start{position:fixed;z-index:20;inset:0;display:grid;place-items:center;background:#02050bf5}.start button{padding:17px 28px;border-radius:12px;background:#071523;color:#dffaff;border:1px solid #65eaff66;letter-spacing:2px}
+.answer{position:fixed;z-index:7;left:50%;top:67%;transform:translateX(-50%);width:min(520px,90vw);padding:14px;border:1px solid #65eaff33;background:#06101ddd;border-radius:12px;opacity:0;transition:.3s}.answer.show{opacity:1}.answer b{font-size:8px;color:#65eaff;letter-spacing:2px}.answer div{font-size:11px;line-height:1.55;margin-top:7px;color:#c1cde0}
+@media(max-width:640px){.side{width:118px;top:104px}.left{left:14px}.right{display:none}.box{padding:8px;margin:5px 0}.hint{display:none}.coreText h1{font-size:30px;letter-spacing:6px}.top{left:14px;right:14px}.quick{padding:6px 7px}.pal{top:58px}}
+.gearb.on{color:#75ffbc;text-shadow:0 0 10px #75ffbc}.start p{margin:14px 0 0;font-size:9px;letter-spacing:2px;color:#6e819c;text-align:center}@media(max-height:520px){.side .box:nth-child(5),.hint{display:none}}
+</style></head><body>
+<div id="scene"></div><video id="cam" autoplay muted playsinline></video><canvas id="paint"></canvas><canvas id="hands"></canvas>
+<div class="hud top"><div class="logo">NOVA<small>GESTURE INTELLIGENCE CORE</small></div><div class="online">● VISION READY</div></div>
+<div class="hud pal" id="pal"></div>
+<div class="hud side left"><div class="box">VISION<b id="vision">STANDBY</b></div><div class="box">VOICE<b id="voice">OFF</b></div><div class="box">GESTURE<b id="gesture">NONE</b></div><div class="box">MODE<b id="mode">IDLE</b></div><div class="box">CONFIDENCE<b id="confidence">--%</b></div><div class="box hint">INDEX — DRAW<br>INDEX + MIDDLE — PICK COLOUR<br>TWO HANDS — ENERGY ORB<br>C — CLEAR · Q — QUIT</div></div>
+<div class="hud side right"><div class="box">CORE LOAD<b>24%</b></div><div class="box">AI ROUTER<b id="router">GEMINI FLASH</b></div></div>
+<div class="hud coreText"><h1>NOVA</h1><p id="state">READY</p></div>
+<div class="answer" id="answer"><b>NOVA RESPONSE</b><div id="answerText"></div></div>
+<div class="cfg" id="cfg"><b>GEMINI FLASH API</b><input id="key" type="password" placeholder="Paste your Gemini API key" autocomplete="off"><input id="model" placeholder="Model name, e.g. gemini-2.5-flash"><input id="voiceName" placeholder="NOVA voice, e.g. Kore, Puck, Aoede, Charon"><button id="save">SAVE</button><div style="margin-top:8px">Key is stored only in this browser. For a public site, call Gemini through your own server instead.</div></div>
+<div class="command"><div class="bar"><button class="gearb" id="mic" title="Voice on/off (tap while NOVA speaks to stop her)">🎙</button><button class="gearb" id="gear" title="Gemini API settings">⚙</button><input id="input" placeholder="Ask NOVA anything..."><button class="send" id="send">↗</button></div><div style="text-align:center"><button class="quick" data-q="System status">SYSTEM STATUS</button><button class="quick" data-q="Explain artificial intelligence">AI EXPLAIN</button><button class="quick" data-q="Analyze my current gesture">ANALYZE GESTURE</button><button class="quick" id="fs">FULLSCREEN</button><button class="quick" id="clr">CLEAR (C)</button></div></div>
+<div class="start" id="start"><div><button id="activate">ACTIVATE NOVA</button><p>ALLOW CAMERA + MICROPHONE, THEN SAY “HEY NOVA”</p></div></div>
+<script>
+const $=id=>document.getElementById(id);
+/* ===== GEMINI FLASH API — paste your key here, or use the ⚙ button next to the input ===== */
+const GEMINI_API_KEY="YOUR_GEMINI_API_KEY";
+const GEMINI_MODEL="gemini-2.5-flash";
+/* NOVA voice: spoken by Gemini TTS. If that fails, the browser voice is used. */
+const TTS_MODEL="gemini-3.1-flash-tts-preview",TTS_FALLBACK="gemini-2.5-flash-preview-tts";
+const LANG="en-IN"; /* speech-recognition language: "en-IN", "en-US", or "hi-IN" for Hindi */
+let KEY=GEMINI_API_KEY,MODEL=GEMINI_MODEL,VOICE="Kore";
+try{KEY=localStorage.getItem("nova_key")||KEY;MODEL=localStorage.getItem("nova_model")||MODEL;VOICE=localStorage.getItem("nova_voice")||VOICE}catch(e){}
+const hasKey=()=>KEY&&KEY!=="YOUR_GEMINI_API_KEY";
+function router(){$("router").textContent="FLASH · "+(hasKey()?"KEY SET":"NO KEY")}router();
+const scene=new THREE.Scene(),cam3=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,100);
+cam3.position.z=7;
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.setClearColor(0x000000,0);$("scene").appendChild(renderer.domElement);
+const core=new THREE.Group();scene.add(core);
+const shell=new THREE.Mesh(new THREE.IcosahedronGeometry(1.25,5),new THREE.MeshBasicMaterial({color:0x65eaff,wireframe:true,transparent:true,opacity:.3}));core.add(shell);
+core.add(new THREE.Mesh(new THREE.SphereGeometry(.62,48,48),new THREE.MeshBasicMaterial({color:0x9af3ff,transparent:true,opacity:.35})));
+for(let i=0;i<7;i++){let r=new THREE.Mesh(new THREE.TorusGeometry(1.45+i*.17,.008,8,160),new THREE.MeshBasicMaterial({color:i%2?0x718cff:0x65eaff,transparent:true,opacity:.3}));r.rotation.x=Math.random()*3.14;r.rotation.y=Math.random()*3.14;r.userData.s=(.0015+Math.random()*.003)*(Math.random()>.5?1:-1);core.add(r)}
+const n=1500,pos=new Float32Array(n*3);for(let i=0;i<n;i++){let r=1.7+Math.random()*3.3,a=Math.random()*6.28,b=Math.random()*3.14;pos[i*3]=Math.sin(b)*Math.cos(a)*r;pos[i*3+1]=Math.cos(b)*r;pos[i*3+2]=Math.sin(b)*Math.sin(a)*r}let pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.BufferAttribute(pos,3));scene.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0x65eaff,size:.018,transparent:true,opacity:.6,blending:THREE.AdditiveBlending})));
+
+/* ===== palette ===== */
+const COLORS=[["PURPLE","#ff2bd6"],["BLUE","#2b5bff"],["GREEN","#2bff5a"],["YELLOW","#ffee2b"],["ORANGE","#ff8a2b"],["CYAN","#65eaff"]];
+let col=COLORS[0][1];const pal=$("pal");
+COLORS.forEach(([nm,c])=>{let s=document.createElement("div");s.className="sw";s.style.cssText=`background:${c};--c:${c}`;s.textContent=nm;s.dataset.c=c;pal.appendChild(s)});
+function setCol(c){col=c;[...pal.children].forEach(s=>s.classList.toggle("on",s.dataset.c===c))}setCol(col);
+
+/* ===== canvases ===== */
+const video=$("cam"),hc=$("hands"),ctx=hc.getContext("2d"),pc=$("paint"),pctx=pc.getContext("2d");
+let gesture="NONE",mode="IDLE",tx=0,ty=0,scale=1,last=null,sm=null;
+function resize(){let k=devicePixelRatio;[hc,pc].forEach(c=>{c.width=innerWidth*k;c.height=innerHeight*k});ctx.setTransform(k,0,0,k,0,0);pctx.setTransform(k,0,0,k,0,0);renderer.setSize(innerWidth,innerHeight);cam3.aspect=innerWidth/innerHeight;cam3.updateProjectionMatrix()}addEventListener("resize",resize);resize();
+function clearPaint(){pctx.clearRect(0,0,innerWidth,innerHeight);last=null}
+
+/* ===== hand maths ===== */
+function d(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+/* landmark -> screen px (mirrored, matches object-fit:cover video) */
+function P(l){let W=innerWidth,H=innerHeight,vw=video.videoWidth||1280,vh=video.videoHeight||720,s=Math.max(W/vw,H/vh);return{x:(1-l.x)*vw*s-(vw*s-W)/2,y:l.y*vh*s-(vh*s-H)/2}}
+const palm=h=>P({x:(h[0].x+h[5].x+h[17].x)/3,y:(h[0].y+h[5].y+h[17].y)/3});
+function classify(h){let w=h[0],e=[[8,6],[12,10],[16,14],[20,18]].map(([t,p])=>d(h[t],w)>d(h[p],w)*1.15),c=e.filter(Boolean).length;
+if(e[0]&&e[1]&&!e[2]&&!e[3])return["SELECT",93];
+if(c===1&&e[0])return["POINT",92];
+if(d(h[4],h[8])<.055&&(e[1]||e[2]||e[3]))return["PINCH",96];
+if(c>=4)return["OPEN PALM",94];
+if(c===0)return["FIST",90];return["TRACKING",65]}
+const links=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20],[5,9],[9,13],[13,17]];
+
+/* ===== glowing skeleton (orange-fire look, follows selected colour) ===== */
+function skel(h){ctx.save();ctx.strokeStyle=col;ctx.lineWidth=2;ctx.shadowBlur=16;ctx.shadowColor=col;
+links.forEach(([a,b])=>{let A=P(h[a]),B=P(h[b]);ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke()});
+h.forEach((p,i)=>{let q=P(p);ctx.beginPath();ctx.arc(q.x,q.y,i===8?6:2.5,0,6.28);ctx.fillStyle=i===8?"#fff":col;ctx.fill()});ctx.restore()}
+
+/* ===== energy orb between two hands ===== */
+function bolt(x1,y1,x2,y2,j){ctx.beginPath();ctx.moveTo(x1,y1);for(let i=1;i<7;i++){let t=i/7;ctx.lineTo(x1+(x2-x1)*t+(Math.random()-.5)*j,y1+(y2-y1)*t+(Math.random()-.5)*j)}ctx.lineTo(x2,y2);ctx.stroke()}
+function orb(a,b){let m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},r=Math.max(24,Math.min(Math.hypot(a.x-b.x,a.y-b.y)*.32,190)),t=performance.now()/1000;
+ctx.save();ctx.globalCompositeOperation="lighter";
+let g=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,r*1.3);g.addColorStop(0,"#fff");g.addColorStop(.18,col);g.addColorStop(1,"transparent");ctx.fillStyle=g;ctx.globalAlpha=.85;ctx.beginPath();ctx.arc(m.x,m.y,r*1.3,0,6.28);ctx.fill();ctx.globalAlpha=1;
+ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=18;ctx.lineWidth=1.6;
+for(let i=0;i<4;i++){let rr=r*(.7+i*.12);ctx.beginPath();ctx.ellipse(m.x,m.y,rr,rr*(.55+.4*Math.sin(t*1.5+i)),t*(.8+i*.4)*(i%2?-1:1),0,6.28);ctx.stroke()}
+ctx.strokeStyle="#fff";ctx.lineWidth=1.2;for(let i=0;i<5;i++){let an=Math.random()*6.28;bolt(m.x,m.y,m.x+Math.cos(an)*r*1.15,m.y+Math.sin(an)*r*1.15,r*.35)}
+ctx.strokeStyle=col;ctx.lineWidth=1.5;bolt(a.x,a.y,m.x,m.y,r*.3);bolt(b.x,b.y,m.x,m.y,r*.3);
+ctx.fillStyle="#fff";for(let i=0;i<24;i++){let an=t*.7+i*2.4,rr=r*(.2+.8*((i*.37+t*.3)%1));ctx.fillRect(m.x+Math.cos(an)*rr,m.y+Math.sin(an)*rr,2,2)}
+ctx.restore();return m}
+
+/* ===== air drawing ===== */
+function paint(p){if(last){pctx.save();pctx.lineCap="round";pctx.strokeStyle=col;pctx.lineWidth=7;pctx.shadowBlur=22;pctx.shadowColor=col;pctx.beginPath();pctx.moveTo(last.x,last.y);pctx.lineTo(p.x,p.y);pctx.stroke();pctx.strokeStyle="#ffffffaa";pctx.lineWidth=2;pctx.shadowBlur=0;pctx.stroke();pctx.restore()}last=p}
+function pick(p){[...pal.children].forEach(s=>{let r=s.getBoundingClientRect();if(p.x>r.left&&p.x<r.right&&p.y>r.top-10&&p.y<r.bottom+10)setCol(s.dataset.c)})}
+function ui(g,c,m){gesture=g;mode=m;$("gesture").textContent=g;$("confidence").textContent=c;$("mode").textContent=m;$("state").textContent=vstate||m}
+
+function results(r){ctx.clearRect(0,0,innerWidth,innerHeight);let L=r.multiHandLandmarks||[];
+if(!L.length){last=null;sm=null;scale=1;ui("NONE","--%","IDLE");return}
+if(L.length>1){L.forEach(skel);let m=orb(palm(L[0]),palm(L[1]));last=null;sm=null;tx=(m.x/innerWidth-.5)*1.8;ty=-(m.y/innerHeight-.5)*1.4;scale=1.15;ui("TWO HANDS","97%","ENERGY ORB");return}
+let h=L[0],[g,c]=classify(h),p=P(h[8]);skel(h);
+tx=(p.x/innerWidth-.5)*1.8;ty=-(p.y/innerHeight-.5)*1.4;scale=g==="PINCH"?1.18:g==="OPEN PALM"?1.08:g==="FIST"?.88:1;
+let m="TRACKING";
+if(g==="POINT"){m="DRAW";sm=sm?{x:sm.x+(p.x-sm.x)*.55,y:sm.y+(p.y-sm.y)*.55}:p;paint(sm)}
+else{last=null;sm=null;if(g==="SELECT"){m="SELECT COLOUR";pick(p);ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,14,0,6.28);ctx.stroke()}else m=g}
+ui(g,c+"%",m)}
+
+const FS=document.documentElement;
+function goFS(){try{let f=FS.requestFullscreen||FS.webkitRequestFullscreen;f&&f.call(FS)?.catch?.(()=>{})}catch(e){}}
+function toggleFS(){if(document.fullscreenElement||document.webkitFullscreenElement)(document.exitFullscreen||document.webkitExitFullscreen).call(document);else if(FS.requestFullscreen||FS.webkitRequestFullscreen)goFS();else alert("This browser can't go fullscreen (iPhone Safari). Use Share > Add to Home Screen to open NOVA fullscreen.")}
+let hands,busy=false;
+async function vision(){goFS();
+let s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:1280},height:{ideal:720}},audio:false});
+video.srcObject=s;await video.play();$("start").remove();document.body.classList.add("live");$("vision").textContent="LOADING";
+try{hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});hands.setOptions({maxNumHands:2,modelComplexity:1,minDetectionConfidence:.65,minTrackingConfidence:.6});hands.onResults(results);if(hands.initialize)await hands.initialize()}catch(e){$("vision").textContent="ERROR";throw e}
+$("vision").textContent="LIVE";
+(async function feed(){if(!busy&&video.readyState>=2){busy=true;try{await hands.send({image:video})}catch(e){console.error(e)}busy=false}requestAnimationFrame(feed)})()}
+
+/* ===== Gemini Flash chat (with memory) ===== */
+const API="https://generativelanguage.googleapis.com/v1beta/models/",hist=[];let vstate="";
+function setS(t){vstate=t;if(t)$("state").textContent=t}function flash(t){setS(t);setTimeout(()=>{if(vstate===t)setS("")},2500)}
+const SYS=()=>`You are NOVA, a smart, friendly voice AI assistant inside a futuristic gesture interface. Answer in 1 to 3 short spoken sentences, plain text only: no markdown, lists or emoji. Reply in the language the user speaks (English, Hindi, or Hinglish in Roman letters). Context: hand gesture ${gesture}, mode ${mode}, drawing colour ${col}.`;
+async function ask(q){if(!q.trim())return;let txt=$("answerText");$("answer").classList.add("show");txt.textContent="You: "+q;setS("THINKING");voiceOn&&setV("THINKING");
+if(!hasKey()){txt.textContent="No Gemini API key yet. Tap ⚙ next to the input and paste your key, or set GEMINI_API_KEY in the code.";flash("AI OFFLINE");return resume()}
+hist.push({role:"user",parts:[{text:q}]});
+try{let res=await fetch(API+MODEL+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":KEY},body:JSON.stringify({systemInstruction:{parts:[{text:SYS()}]},contents:hist.slice(-11)})});
+if(!res.ok)throw Error(res.status+(res.status===404?" (check model name)":res.status===400||res.status===403?" (check API key)":""));
+let j=await res.json(),reply=(j.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"").trim();if(!reply)throw Error("empty response");
+hist.push({role:"model",parts:[{text:reply}]});txt.textContent=reply;if(voiceOn)speak(reply);else flash("RESPONSE READY")}
+catch(e){hist.pop();txt.textContent="Gemini request failed: "+e.message;flash("AI ERROR");resume()}}
+
+/* ===== NOVA voice: always-on "Hey Nova" -> Gemini -> Gemini TTS ===== */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition,WAKE=/(?:hey|hay|hi|hello|okay|ok|हे|हेय)[\s,.!-]*(?:nova|noba|novo|nover|नोवा)/i,STRIP=new RegExp("^.*?"+WAKE.source,"i");
+let rec,voiceOn=false,awake=false,speaking=false,sleepT,AC,an,curSrc,playing=false,localSp=false,level=0;const abuf=new Uint8Array(128);
+function setV(t){$("voice").textContent=t}
+function idleText(){setV(voiceOn?"SAY “HEY NOVA”":"OFF")}
+function initAudio(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();an=AC.createAnalyser();an.fftSize=256;an.connect(AC.destination)}AC.resume()}
+function beep(){if(!AC)return;let o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.frequency.value=880;g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.connect(g);g.connect(AC.destination);o.start();o.stop(t+.2)}
+function armSleep(ms){clearTimeout(sleepT);sleepT=setTimeout(()=>{awake=false;if(!speaking&&vstate==="LISTENING")setS("");idleText()},ms)}
+function wakeUp(){awake=true;beep();setV("LISTENING");setS("LISTENING");$("answer").classList.add("show");$("answerText").textContent="Listening…";armSleep(9000)}
+function onSpeech(e){if(speaking)return;for(let i=e.resultIndex;i<e.results.length;i++){let r=e.results[i],t=r[0].transcript.trim();
+if(!awake&&WAKE.test(t))wakeUp();
+if(awake){let q=t.replace(STRIP,"").trim();if(q){$("answerText").textContent="You: "+q;armSleep(9000)}if(r.isFinal&&q){awake=false;clearTimeout(sleepT);ask(q)}}}}
+function startRec(){if(!voiceOn||speaking||!SR)return;if(!rec){rec=new SR();rec.continuous=true;rec.interimResults=true;rec.lang=LANG;rec.onresult=onSpeech;
+rec.onend=()=>{if(voiceOn&&!speaking)setTimeout(startRec,250)};
+rec.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed"){voiceOn=false;$("mic").classList.remove("on");setV("MIC BLOCKED")}}}
+try{rec.start()}catch(e){}}
+function resume(){if(!voiceOn)return;awake=false;idleText();startRec()}
+function startVoice(){if(!SR){setV("USE CHROME / EDGE");return}voiceOn=true;$("mic").classList.add("on");idleText();startRec()}
+function stopVoice(){voiceOn=false;awake=false;clearTimeout(sleepT);stopSpeak();try{rec&&rec.abort()}catch(e){}$("mic").classList.remove("on");setV("OFF");setS("")}
+function stopSpeak(){try{curSrc&&curSrc.stop()}catch(e){}try{speechSynthesis.cancel()}catch(e){}}
+async function tts(text){for(const m of[TTS_MODEL,TTS_FALLBACK]){try{let r=await fetch(API+m+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":KEY},body:JSON.stringify({contents:[{parts:[{text}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:VOICE}}}}})});if(!r.ok)continue;
+let p=(await r.json()).candidates?.[0]?.content?.parts?.find(x=>x.inlineData);if(p)return p.inlineData}catch(e){}}return null}
+function playPCM(a){return new Promise(res=>{initAudio();let raw=atob(a.data),n=raw.length>>1,f=new Float32Array(n);for(let i=0;i<n;i++){let v=raw.charCodeAt(2*i)|raw.charCodeAt(2*i+1)<<8;if(v>=32768)v-=65536;f[i]=v/32768}
+let m=/rate=(\d+)/.exec(a.mimeType||""),b=AC.createBuffer(1,n,m?+m[1]:24000);b.copyToChannel(f,0);let s=AC.createBufferSource();s.buffer=b;s.connect(an);curSrc=s;playing=true;s.onended=()=>{playing=false;curSrc=null;res()};s.start()})}
+function sayLocal(t){return new Promise(res=>{if(!window.speechSynthesis)return res();let u=new SpeechSynthesisUtterance(t);u.lang=LANG;let done=()=>{localSp=false;res()};u.onend=u.onerror=done;setTimeout(done,3000+t.length*90);localSp=true;speechSynthesis.speak(u)})}
+async function speak(text){speaking=true;setV("SPEAKING");setS("SPEAKING");try{rec&&rec.abort()}catch(e){}
+try{let clean=text.replace(/[*_#`>~]/g,""),a=await tts(clean);a?await playPCM(a):await sayLocal(clean)}catch(e){console.warn(e)}
+finally{speaking=false;setS("");if(voiceOn){awake=true;setV("LISTENING");armSleep(7000);startRec()}}}
+function pulse(){if(playing){an.getByteTimeDomainData(abuf);let s=0;for(const v of abuf)s+=((v-128)/128)**2;level=Math.min(1,Math.sqrt(s/abuf.length)*4)}else if(localSp)level=.25+.2*Math.sin(performance.now()/90);else level*=.9}
+
+/* ===== UI wiring ===== */
+$("activate").onclick=()=>{initAudio();startVoice();return vision().catch(e=>alert(e.name==="NotAllowedError"||e.name==="NotFoundError"?"Camera not available: allow camera permission and open this page via localhost or https.":"Could not start vision: "+(e.message||e)))};
+$("send").onclick=()=>{let i=$("input");ask(i.value);i.value=""};$("input").onkeydown=e=>{if(e.key==="Enter")$("send").click()};
+document.querySelectorAll(".quick[data-q]").forEach(b=>b.onclick=()=>ask(b.dataset.q));
+$("fs").onclick=toggleFS;$("clr").onclick=clearPaint;
+$("mic").onclick=()=>{if(speaking)stopSpeak();else if(voiceOn)stopVoice();else{initAudio();startVoice()}};
+$("gear").onclick=()=>{$("key").value=hasKey()?KEY:"";$("model").value=MODEL;$("voiceName").value=VOICE;$("cfg").classList.toggle("show")};
+$("save").onclick=()=>{KEY=$("key").value.trim()||GEMINI_API_KEY;MODEL=$("model").value.trim()||GEMINI_MODEL;VOICE=$("voiceName").value.trim()||"Kore";try{localStorage.setItem("nova_key",KEY);localStorage.setItem("nova_model",MODEL);localStorage.setItem("nova_voice",VOICE)}catch(e){}router();$("cfg").classList.remove("show")};
+addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;let k=e.key.toLowerCase();if(k==="c")clearPaint();if(k==="q"){let s=video.srcObject;s&&s.getTracks().forEach(t=>t.stop());location.reload()}});
+
+function loop(){requestAnimationFrame(loop);core.rotation.y+=.0015;core.rotation.x+=.0005;core.position.x+=(tx-core.position.x)*.04;core.position.y+=(ty-core.position.y)*.04;pulse();core.scale.setScalar(1+(scale-1)*.08+Math.sin(performance.now()/800)*.015+level*.18);core.children.forEach(o=>{if(o.userData.s){o.rotation.z+=o.userData.s;o.rotation.x+=o.userData.s*.3}});renderer.render(scene,cam3)}loop();
+</script></body></html>
